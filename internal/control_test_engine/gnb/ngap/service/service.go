@@ -36,14 +36,15 @@ func InitConn(amf *context.GNBAmf, gnb *context.GNBContext) error {
 		rem,
 		sctp.InitMsg{NumOstreams: 2, MaxInstreams: 2})
 	if err != nil {
-		amf.SetSCTPConn(nil)
+		amf.SetSCTPConn("", nil)
 		return err
 	}
 
 	// set streams and other information about TNLA
 
 	// successful established SCTP (TNLA - N2)
-	amf.SetSCTPConn(conn)
+	amf.AddTNLA() // Add default TNLAssociation
+	amf.SetSCTPConn("", conn) // AMF Name will be retrieved in NG Setup Response 
 	gnb.SetN2(conn)
 
 	conn.SubscribeEvents(sctp.SCTP_EVENT_DATA_IO)
@@ -56,8 +57,7 @@ func InitConn(amf *context.GNBAmf, gnb *context.GNBContext) error {
 func GnbListen(amf *context.GNBAmf, gnb *context.GNBContext) {
 
 	buf := make([]byte, 65535)
-	conn := amf.GetSCTPConn()
-
+	conn := amf.GetSCTPConn(amf.GetAmfName())
 	/*
 		defer func() {
 			err := conn.Close()

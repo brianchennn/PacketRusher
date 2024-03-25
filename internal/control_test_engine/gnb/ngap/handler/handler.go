@@ -482,6 +482,11 @@ func HandlerNgSetupResponse(amf *context.GNBAmf, gnb *context.GNBContext, messag
 			} else {
 				amfName := ies.Value.AMFName.Value
 				amf.SetAmfName(amfName)
+				tnlaList := amf.GetTNLAs()
+				if tnlaList[0].GetAmfName() == "" {
+					log.Info("[GNB][TNLA] Set default TNLA's AMF Name")
+					tnlaList[0].SetAmfName(amfName)
+				}
 			}
 
 		case ngapType.ProtocolIEIDServedGUAMIList:
@@ -662,10 +667,28 @@ func HandlerUeContextReleaseCommand(gnb *context.GNBContext, message *ngapType.N
 func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext, message *ngapType.NGAPPDU) {
 
 	// TODO: Implement update AMF Context from AMFConfigurationUpdate
-	_ = message.InitiatingMessage.Value.AMFConfigurationUpdate
-	log.Warn("[GNB][AMF] Ignoring AMFConfigurationUpdate but send AMFConfigurationUpdateAcknowledge")
-	log.Warn("[GNB][AMF] TODO: Implement update AMF Context from AMFConfigurationUpdate")
+	valueMessage := message.InitiatingMessage.Value.AMFConfigurationUpdate
+	// log.Warn("[GNB][AMF] Ignoring AMFConfigurationUpdate but send AMFConfigurationUpdateAcknowledge")
+	// log.Warn("[GNB][AMF] TODO: Implement update AMF Context from AMFConfigurationUpdate")
+	for _, ie := range valueMessage.ProtocolIEs.List{
+		switch ie.Id.Value {
 
+		case ngapType.ProtocolIEIDAMFTNLAssociationToAddList:
+			toAddList := ie.Value.AMFTNLAssociationToAddList
+			for _, toAddItem := range toAddList.List {
+				amf.AddTNLA()
+				amf.SetTNLAUsage(amf.GetAmfName(), toAddItem.TNLAssociationUsage.Value)
+				amf.SetTNLAWeight(amf.GetAmfName(), toAddItem.TNLAddressWeightFactor.Value)
+			}
+
+		// case ngapType.ProtocolIEIDAMFTNLAssociationToRemoveList:
+		// 	toRemoveList := ie.Value.AMFTNLAssociationToRemoveList
+			
+		// case ngapType.ProtocolIEIDAMFTNLAssociationToUpdateList:
+		
+		// default:
+		}
+	}
 	trigger.SendAmfConfigurationUpdateAcknowledge(amf)
 }
 

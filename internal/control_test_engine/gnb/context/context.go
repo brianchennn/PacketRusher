@@ -116,7 +116,7 @@ func (gnb *GNBContext) NewGnBUe(gnbTx chan UEMessage, gnbRx chan UEMessage, prUe
 
 	// set amfId and SCTP association for UE.
 	ue.SetAmfId(amf.GetAmfId())
-	ue.SetSCTP(amf.GetSCTPConn())
+	ue.SetSCTP(amf.GetSCTPConn(amf.GetAmfName()))
 
 	// return UE Context.
 	return ue

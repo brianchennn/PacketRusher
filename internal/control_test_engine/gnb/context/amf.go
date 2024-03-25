@@ -7,7 +7,10 @@ package context
 import (
 	"fmt"
 
+	"github.com/free5gc/aper"
+	"github.com/free5gc/openapi/models"
 	"github.com/ishidawataru/sctp"
+	log "github.com/sirupsen/logrus"
 )
 
 // AMF main states in the GNB Context.
@@ -19,7 +22,7 @@ type GNBAmf struct {
 	amfIp               string         // AMF ip
 	amfPort             int            // AMF port
 	amfId               int64          // AMF id
-	tnla                TNLAssociation // AMF sctp associations
+	tnlaList                []*TNLAssociation // AMF sctp associations
 	relativeAmfCapacity int64          // AMF capacity
 	state               int
 	name                string // amf name.
@@ -35,8 +38,11 @@ type GNBAmf struct {
 
 type TNLAssociation struct {
 	sctpConn         *sctp.SCTPConn
+	amfName			 string
+	backupAmfName	 string
+	Guami			 *models.Guami
 	tnlaWeightFactor int64
-	usage            bool
+	usage            aper.Enumerated
 	streams          uint16
 }
 
@@ -153,8 +159,8 @@ func (amf *GNBAmf) AddedSlice(sst string, sd string) {
 	amf.lenSlice++
 }
 
-func (amf *GNBAmf) getTNLAs() TNLAssociation {
-	return amf.tnla
+func (amf *GNBAmf) GetTNLAs() []*TNLAssociation {
+	return amf.tnlaList
 }
 
 func (amf *GNBAmf) SetStateInactive() {
@@ -173,28 +179,103 @@ func (amf *GNBAmf) GetState() int {
 	return amf.state
 }
 
-func (amf *GNBAmf) GetSCTPConn() *sctp.SCTPConn {
-	return amf.tnla.sctpConn
+func (amf *GNBAmf) GetSCTPConn(amfName string) *sctp.SCTPConn {
+	if len(amf.tnlaList) == 0 {
+		log.Error("[AMF][TNLA] TNLA list is empty")
+		return nil
+	}
+	for _, tnla := range amf.tnlaList {
+		if tnla.amfName == amfName {
+			return tnla.sctpConn
+		}
+	}
+
+	return nil
 }
 
-func (amf *GNBAmf) SetSCTPConn(conn *sctp.SCTPConn) {
-	amf.tnla.sctpConn = conn
+func (amf *GNBAmf) SetSCTPConn(amfName string, conn *sctp.SCTPConn) {
+	if len(amf.tnlaList) == 0 {
+		log.Error("[AMF][TNLA] TNLA list is empty")
+		return
+	}
+
+	for _, tnla := range amf.tnlaList {
+		if tnla.amfName == amfName {
+			tnla.sctpConn = conn
+			break
+		}
+	}
 }
 
-func (amf *GNBAmf) setTNLAWeight(weight int64) {
-	amf.tnla.tnlaWeightFactor = weight
+func (amf *GNBAmf) AddTNLA() {
+	log.Info("[GNB] Add first TNLA")
+	amf.tnlaList = append(amf.tnlaList, new(TNLAssociation))
 }
 
-func (amf *GNBAmf) setTNLAUsage(usage bool) {
-	amf.tnla.usage = usage
+func (tnla *TNLAssociation) SetAmfName(AmfName string) error {
+	tnla.amfName = AmfName
+	return nil
 }
 
-func (amf *GNBAmf) SetTNLAStreams(streams uint16) {
-	amf.tnla.streams = streams
+func (tnla *TNLAssociation) GetAmfName() string {
+	return tnla.amfName
 }
 
-func (amf *GNBAmf) GetTNLAStreams() uint16 {
-	return amf.tnla.streams
+func (amf *GNBAmf) SetTNLAWeight(amfName string, weight int64) {
+	if len(amf.tnlaList) == 0 {
+		log.Error("[AMF][TNLA] TNLA list is empty")
+		return
+	}
+
+	for _, tnla := range amf.tnlaList {
+		if tnla.amfName == amfName {
+			tnla.tnlaWeightFactor = weight
+			break
+		}
+	}
+}
+
+func (amf *GNBAmf) SetTNLAUsage(amfName string, usage aper.Enumerated) {
+	if len(amf.tnlaList) == 0 {
+		log.Error("[AMF][TNLA] TNLA list is empty")
+		return
+	}
+
+	for _, tnla := range amf.tnlaList {
+		if tnla.amfName == amfName {
+			tnla.usage = usage
+			break
+		}
+	}
+}
+
+func (amf *GNBAmf) SetTNLAStreams(amfName string, streams uint16) {
+	if len(amf.tnlaList) == 0 {
+		log.Error("[AMF][TNLA] TNLA list is empty")
+		return
+	}
+
+	for _, tnla := range amf.tnlaList {
+		if tnla.amfName == amfName {
+			tnla.streams = streams 
+			break
+		}
+	}
+}
+
+func (amf *GNBAmf) GetTNLAStreams(amfName string) uint16 {
+	if len(amf.tnlaList) == 0 {
+		log.Error("[AMF][TNLA] TNLA list is empty")
+		return 0
+	}
+
+	for _, tnla := range amf.tnlaList {
+		if tnla.amfName == amfName {
+			return tnla.streams
+		}
+	}
+
+	return 0
 }
 
 func (amf *GNBAmf) GetAmfIp() string {

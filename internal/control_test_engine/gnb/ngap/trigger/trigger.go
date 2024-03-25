@@ -116,7 +116,7 @@ func SendAmfConfigurationUpdateAcknowledge(amf *context.GNBAmf) {
 	}
 
 	// Send AMF Configure Update Acknowledge
-	conn := amf.GetSCTPConn()
+	conn := amf.GetSCTPConn(amf.GetAmfName())
 	err = sender.SendToAmF(ngapMsg, conn)
 	if err != nil {
 		log.Fatal("[GNB][NGAP] Error sending AMF Configuration Update Acknowledge: ", err)
@@ -132,7 +132,7 @@ func SendNgSetupRequest(gnb *context.GNBContext, amf *context.GNBAmf) {
 		log.Info("[GNB][NGAP] Error sending NG Setup Request: ", err)
 	}
 
-	conn := amf.GetSCTPConn()
+	conn := amf.GetSCTPConn(amf.GetAmfName())
 	err = sender.SendToAmF(ngapMsg, conn)
 	if err != nil {
 		log.Info("[GNB][AMF] Error sending NG Setup Request: ", err)
