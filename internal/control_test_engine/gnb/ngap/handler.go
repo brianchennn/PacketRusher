@@ -836,9 +836,9 @@ func HandlerAmfStatusIndication(amf *context.GNBAmf, gnb *context.GNBContext, me
 			for _, unavailableGuamiItem := range ie.Value.UnavailableGUAMIList.List {
 				octetStr := unavailableGuamiItem.GUAMI.PLMNIdentity.Value
 				hexStr := fmt.Sprintf("%02x%02x%02x", octetStr[0], octetStr[1], octetStr[2])
-				var unavailableMcc, unavailableMnc string
-				unavailableMcc = string(hexStr[1]) + string(hexStr[0]) + string(hexStr[3])
-				unavailableMnc = string(hexStr[5]) + string(hexStr[4])
+
+				unavailableMcc := string(hexStr[1]) + string(hexStr[0]) + string(hexStr[3])
+				unavailableMnc := string(hexStr[5]) + string(hexStr[4])
 				if hexStr[2] != 'f' {
 					unavailableMnc = string(hexStr[2]) + string(hexStr[5]) + string(hexStr[4])
 				}
