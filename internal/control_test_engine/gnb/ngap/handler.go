@@ -895,12 +895,6 @@ func HandlerAmfStatusIndication(amf *context.GNBAmf, gnb *context.GNBContext, me
 									return true
 								}
 
-								if ue.GetAmfId() == oldAmf.GetAmfId() {
-									// set amfId and SCTP association for UE.
-									ue.SetAmfId(backupAmf.GetAmfId())
-									ue.SetSCTP(backupAmf.GetSCTPConn())
-								}
-
 								return true
 							})
 
@@ -923,9 +917,10 @@ func HandlerAmfStatusIndication(amf *context.GNBAmf, gnb *context.GNBContext, me
 							tnla.Release()
 							amfPool.Delete(k)
 
-							return true
 						}
+
 					}
+
 					return true
 				})
 			}
