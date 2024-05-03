@@ -31,4 +31,4 @@ done
 echo "Done setting the configuration"
 echo "Running tester"
 
-./app load-test -n $NUM_UE
+# ./app load-test -n $NUM_UE

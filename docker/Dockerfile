@@ -13,6 +13,7 @@ ENV GOPATH=/goproject
 ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
 COPY . /packetrusher
+COPY replace_pkg/ngap /ngap
 
 RUN cd /packetrusher \
     && go mod download \
