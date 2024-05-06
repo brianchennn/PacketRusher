@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-CONFIG_DIR="/packetrusher/config"
+CONFIG_DIR="/packetrusher/cmd/config"
 
 DEREG_AFTER=${DEREG_AFTER:-3600}
 
@@ -29,6 +29,14 @@ for c in ${CONFIG_DIR}/config.yml; do
     sed -i "${EXPRESSIONS}" ${c}
 done
 echo "Done setting the configuration"
-echo "Running tester"
 
+cat "${CONFIG_DIR}/config.yml"
+# echo "Running tester"
 # ./app load-test -n $NUM_UE
+
+sed -i '27,30s/sst: "\([^"]*\)"/sst: \1/' "${CONFIG_DIR}/config.yml"
+
+# echo "Start to NG Setup"
+# ./app ue
+
+sleep infinity

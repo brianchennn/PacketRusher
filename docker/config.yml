@@ -25,7 +25,7 @@ ue:
     mcc: "@MCC@"
     mnc: "@MNC@"
   snssai:
-    sst: @SST_UE@
+    sst: "@SST_UE@"
     sd: "@SD@"
   integrity:
     nia0: false
@@ -37,7 +37,8 @@ ue:
     nea1: false
     nea2: true
     nea3: false
-
 amfif:
-  ip: "@NGAP_REMOTE_ADDR@"
-  port: 38412
+  - ip: "@NGAP_REMOTE_ADDR@"
+    port: 38412
+logs:
+  level: 4
