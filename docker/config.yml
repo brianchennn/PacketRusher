@@ -19,7 +19,8 @@ ue:
   key: "@KEY@"
   opc: "@OPC@"
   amf: "8000"
-  sqn: "0000000"
+  sqn: "00000000015b"
+  routingindicator: "0000"
   dnn: "@DNN@"
   hplmn:
     mcc: "@MCC@"
