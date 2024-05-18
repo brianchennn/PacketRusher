@@ -44,4 +44,4 @@ COPY --from=builder /packetrusher/cmd/app .
 COPY --from=builder /packetrusher/docker/config.yml config/config.yml
 COPY --from=builder /packetrusher/docker/entrypoint.sh .
 
-ENTRYPOINT ["/packetrusher/cmd/entrypoint.sh"]
+# ENTRYPOINT ["/packetrusher/cmd/entrypoint.sh"]

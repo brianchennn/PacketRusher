@@ -19,7 +19,7 @@ ue:
   key: "@KEY@"
   opc: "@OPC@"
   amf: "8000"
-  sqn: "00000000015b"
+  sqn: "00000000002a"
   routingindicator: "0000"
   dnn: "@DNN@"
   hplmn:
@@ -34,7 +34,7 @@ ue:
     nia2: true
     nia3: false
   ciphering:
-    nea0: false
+    nea0: true
     nea1: false
     nea2: true
     nea3: false
