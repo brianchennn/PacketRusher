@@ -34,14 +34,9 @@ RUN mkdir goproject
 ENV GOPATH=/goproject
 ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
-WORKDIR /packetrusher/config/
-COPY --from=builder /packetrusher/docker/config.yml .
-
-
 WORKDIR /packetrusher/cmd
 RUN mkdir -p config
 COPY --from=builder /packetrusher/cmd/app .
-COPY --from=builder /packetrusher/docker/config.yml config/config.yml
 COPY --from=builder /packetrusher/docker/entrypoint.sh .
 
 # ENTRYPOINT ["/packetrusher/cmd/entrypoint.sh"]
