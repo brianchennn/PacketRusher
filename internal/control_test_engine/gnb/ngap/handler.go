@@ -968,11 +968,12 @@ func tnlaRebindingByBackupAmf(
 				// NGAP UE-TNLA Rebinding
 				tnla := oldAmf.GetTNLA()
 
-				f, err := os.OpenFile("/home/brian/PacketRusher/log/PDU_Session_Destroy_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+				f1, err := os.OpenFile("/home/brian/PacketRusher/log/PDU_Session_Create_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 				if err != nil {
 					fmt.Println("Error opening or creating file:", err)
 				}
-				_, err = fmt.Fprintf(f, "%s\n", "TNLA-Rebinding")
+
+				_, err = fmt.Fprintf(f1, "%s\n", "TNLA-Rebinding")
 				if err != nil {
 					fmt.Println("Error writing to file:", err)
 				}

@@ -5,7 +5,6 @@
 package ue
 
 import (
-	"fmt"
 	"my5G-RANTester/config"
 	context2 "my5G-RANTester/internal/control_test_engine/gnb/context"
 	"my5G-RANTester/internal/control_test_engine/procedures"
@@ -125,27 +124,12 @@ func ueMgrHandler(msg procedures.UeTesterMessage, ue *context.UEContext) bool {
 	case procedures.NewPDUSession:
 		trigger.InitPduSessionRequest(ue)
 	case procedures.DestroyPDUSession:
-
-		timeStart := time.Now().UnixMicro()
-
 		pdu, err := ue.GetPduSession(msg.Param)
 		if err != nil {
 			log.Error("[UE] Cannot release unknown PDU Session ID ", msg.Param)
 			return loop
 		}
 		trigger.InitPduSessionRelease(ue, pdu)
-
-		timeEnd := time.Now().UnixMicro()
-		f, err := os.OpenFile("log/PDU_Session_Destroy_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-		if err != nil {
-			fmt.Println("Error opening or creating file:", err)
-		}
-
-		_, err = fmt.Fprintf(f, "%d\n", timeEnd-timeStart)
-		if err != nil {
-			fmt.Println("Error writing to file:", err)
-		}
-
 	case procedures.Idle:
 		// We switch UE to IDLE
 		ue.SetStateMM_IDLE()

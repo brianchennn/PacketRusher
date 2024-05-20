@@ -12,6 +12,7 @@ import (
 	"my5G-RANTester/internal/control_test_engine/ue/nas/message/nas_control/mm_5gs"
 	"my5G-RANTester/internal/control_test_engine/ue/nas/message/sender"
 	"my5G-RANTester/internal/control_test_engine/ue/nas/trigger"
+	"os"
 	"reflect"
 	"time"
 
@@ -262,6 +263,17 @@ func HandlerRegistrationAccept(ue *context.UEContext, message *nas.Message) {
 
 	// sending to GNB
 	sender.SendToGnb(ue, registrationComplete)
+
+	timeEnd := time.Now().UnixMicro()
+	f, err := os.OpenFile("log/PDU_Session_Registraion_Request.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+	if err != nil {
+		fmt.Println("Error opening or creating file:", err)
+	}
+
+	_, err = fmt.Fprintf(f, "%d\n", timeEnd)
+	if err != nil {
+		fmt.Println("Error writing to file:", err)
+	}
 }
 
 func HandlerServiceAccept(ue *context.UEContext, message *nas.Message) {
@@ -318,7 +330,16 @@ func HandlerDlNasTransportPduaccept(ue *context.UEContext, message *nas.Message)
 	switch payloadContainer.GsmHeader.GetMessageType() {
 	case nas.MsgTypePDUSessionEstablishmentAccept:
 		log.Info("[UE][NAS] Receiving PDU Session Establishment Accept")
+		timeEnd := time.Now().UnixMicro()
+		f, err := os.OpenFile("log/PDU_Session_Create_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+		if err != nil {
+			fmt.Println("Error opening or creating file:", err)
+		}
 
+		_, err = fmt.Fprintf(f, "%d\n", timeEnd)
+		if err != nil {
+			fmt.Println("Error writing to file:", err)
+		}
 		// get UE ip
 		pduSessionEstablishmentAccept := payloadContainer.PDUSessionEstablishmentAccept
 

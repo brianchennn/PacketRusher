@@ -10,11 +10,14 @@
 package trigger
 
 import (
+	"fmt"
 	context2 "my5G-RANTester/internal/control_test_engine/gnb/context"
 	"my5G-RANTester/internal/control_test_engine/ue/context"
 	"my5G-RANTester/internal/control_test_engine/ue/nas/message/nas_control"
 	"my5G-RANTester/internal/control_test_engine/ue/nas/message/nas_control/mm_5gs"
 	"my5G-RANTester/internal/control_test_engine/ue/nas/message/sender"
+	"os"
+	"time"
 
 	"github.com/free5gc/nas"
 	"github.com/free5gc/nas/nasMessage"
@@ -23,6 +26,17 @@ import (
 
 func InitRegistration(ue *context.UEContext) {
 	log.Info("[UE] Initiating Registration")
+	var err error
+	timeStart := time.Now().UnixMicro()
+	f, err := os.OpenFile("log/PDU_Session_Registraion_Request.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+	if err != nil {
+		fmt.Println("Error opening or creating file:", err)
+	}
+
+	_, err = fmt.Fprintf(f, "%d,", timeStart)
+	if err != nil {
+		fmt.Println("Error writing to file:", err)
+	}
 
 	// registration procedure started.
 	registrationRequest := mm_5gs.GetRegistrationRequest(
@@ -32,7 +46,6 @@ func InitRegistration(ue *context.UEContext) {
 		false,
 		ue)
 
-	var err error
 	if len(ue.UeSecurity.Kamf) != 0 {
 		registrationRequest, err = nas_control.EncodeNasPduWithSecurity(ue, registrationRequest, nas.SecurityHeaderTypeIntegrityProtected, true, false)
 		if err != nil {
@@ -48,6 +61,17 @@ func InitRegistration(ue *context.UEContext) {
 
 func InitPduSessionRequest(ue *context.UEContext) {
 	log.Info("[UE] Initiating New PDU Session")
+
+	timeStart := time.Now().UnixMicro()
+	f, err := os.OpenFile("log/PDU_Session_Create_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+	if err != nil {
+		fmt.Println("Error opening or creating file:", err)
+	}
+
+	_, err = fmt.Fprintf(f, "%d,", timeStart)
+	if err != nil {
+		fmt.Println("Error writing to file:", err)
+	}
 
 	pduSession, err := ue.CreatePDUSession()
 	if err != nil {

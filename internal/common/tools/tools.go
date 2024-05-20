@@ -160,11 +160,11 @@ func SimulateSingleUE(simConfig UESimulationConfig, wg *sync.WaitGroup) {
 		go func() {
 			for {
 				if registered {
-					time.Sleep(time.Second * 5)
+					time.Sleep(time.Second * 1)
 
 					log.Warnln("PDU session destroy")
 					ueRx <- procedures.UeTesterMessage{Type: procedures.DestroyPDUSession, Param: 1}
-					
+
 					time.Sleep(time.Second * 5)
 
 					log.Warnln("PDU session create")
