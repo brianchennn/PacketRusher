@@ -136,7 +136,7 @@ func ueMgrHandler(msg procedures.UeTesterMessage, ue *context.UEContext) bool {
 		trigger.InitPduSessionRelease(ue, pdu)
 
 		timeEnd := time.Now().UnixMicro()
-		f, err := os.OpenFile("/home/brian/PacketRusher/log/PDU_Session_Destroy_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+		f, err := os.OpenFile("log/PDU_Session_Destroy_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
 		if err != nil {
 			fmt.Println("Error opening or creating file:", err)
 		}

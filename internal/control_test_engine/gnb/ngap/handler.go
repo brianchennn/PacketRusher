@@ -11,7 +11,9 @@ import (
 	"my5G-RANTester/internal/control_test_engine/gnb/context"
 	"my5G-RANTester/internal/control_test_engine/gnb/nas/message/sender"
 	"my5G-RANTester/internal/control_test_engine/gnb/ngap/trigger"
+	"os"
 	"reflect"
+	"sync"
 
 	_ "net"
 
@@ -739,7 +741,7 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 
 				port := 38412 // default sctp port
 				newAmf := gnb.NewGnBAmf(ipv4String, port)
-				newAmf.SetAmfName(amfName)
+				// newAmf.SetAmfName(amfName)
 				newAmf.SetAmfCapacity(amfCapacity)
 				newAmf.SetRegionId(amfRegionId)
 				newAmf.SetSetId(amfSetId)
@@ -932,6 +934,89 @@ func HandlerAmfStatusIndication(amf *context.GNBAmf, gnb *context.GNBContext, me
 			}
 		}
 	}
+}
+
+func tnlaRebindingByBackupAmf(
+	gnb *context.GNBContext,
+	backupAmf *context.GNBAmf,
+	amfPool *sync.Map,
+	unavailableMcc, unavailableMnc string,
+	unavailableGuamiItem *ngapType.UnavailableGUAMIItem,
+) {
+	log.Infof("[GNB] TNLA Rebinding by backup AMF: %s", backupAmf.GetAmfName())
+	amfPool.Range(func(k, v any) bool {
+		oldAmf, ok := v.(*context.GNBAmf)
+		if !ok {
+			return true
+		}
+		for j := 0; j < oldAmf.GetLenPlmns(); j++ {
+			oldAmfSupportMcc, oldAmfSupportMnc := oldAmf.GetPlmnSupport(j)
+
+			if oldAmfSupportMcc == unavailableMcc && oldAmfSupportMnc == unavailableMnc &&
+				reflect.DeepEqual(oldAmf.GetRegionId(), unavailableGuamiItem.GUAMI.AMFRegionID.Value) &&
+				reflect.DeepEqual(oldAmf.GetSetId(), unavailableGuamiItem.GUAMI.AMFSetID.Value) &&
+				reflect.DeepEqual(oldAmf.GetPointer(), unavailableGuamiItem.GUAMI.AMFPointer.Value) {
+
+				log.Info("[GNB][AMF] Remove AMF: [",
+					"Id: ", oldAmf.GetAmfId(),
+					" Name: ", oldAmf.GetAmfName(),
+					" Ipv4: ", oldAmf.GetAmfIp(),
+					"]",
+				)
+				log.Info("Backup AMF: [Name: ", backupAmf.GetAmfName(), "]")
+
+				// NGAP UE-TNLA Rebinding
+				tnla := oldAmf.GetTNLA()
+
+				f, err := os.OpenFile("/home/brian/PacketRusher/log/PDU_Session_Destroy_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+				if err != nil {
+					fmt.Println("Error opening or creating file:", err)
+				}
+				_, err = fmt.Fprintf(f, "%s\n", "TNLA-Rebinding")
+				if err != nil {
+					fmt.Println("Error writing to file:", err)
+				}
+
+				uePool := gnb.GetUePool()
+				uePool.Range(func(_, v2 any) bool {
+					ue, ok := v2.(*context.GNBUe)
+					if !ok {
+						return true
+					}
+
+					if ue.GetAmfId() == oldAmf.GetAmfId() {
+						// set amfId and SCTP association for UE.
+						ue.SetAmfId(backupAmf.GetAmfId())
+						ue.SetSCTP(backupAmf.GetSCTPConn())
+					}
+
+					return true
+				})
+
+				prUePool := gnb.GetPrUePool()
+				prUePool.Range(func(_, v2 any) bool {
+					ue, ok := v2.(*context.GNBUe)
+					if !ok {
+						return true
+					}
+
+					if ue.GetAmfId() == oldAmf.GetAmfId() {
+						// set amfId and SCTP association for UE.
+						ue.SetAmfId(backupAmf.GetAmfId())
+						ue.SetSCTP(backupAmf.GetSCTPConn())
+					}
+
+					return true
+				})
+
+				tnla.Release()
+				amfPool.Delete(k)
+
+				return true
+			}
+		}
+		return true
+	})
 }
 
 func HandlerPathSwitchRequestAcknowledge(gnb *context.GNBContext, message *ngapType.NGAPPDU) {
