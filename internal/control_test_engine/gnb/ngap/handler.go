@@ -847,17 +847,39 @@ func HandlerAmfStatusIndication(amf *context.GNBAmf, gnb *context.GNBContext, me
 
 				amfPool := gnb.GetAmfPool()
 
-				// select backup AMF
 				var backupAmf *context.GNBAmf
+				if unavailableGuamiItem.BackupAMFName != nil {
+					// select backup AMF
+					amfPool.Range(func(k, v any) bool {
+						amf, ok := v.(*context.GNBAmf)
+						if !ok {
+							return true
+						}
+
+						if amf.GetAmfName() == unavailableGuamiItem.BackupAMFName.Value {
+							backupAmf = amf
+							return false
+						}
+
+						return true
+					})
+				}
+
 				amfPool.Range(func(k, v any) bool {
-					amf, ok := v.(*context.GNBAmf)
+					oldAmf, ok := v.(*context.GNBAmf)
 					if !ok {
 						return true
 					}
-					if unavailableGuamiItem.BackupAMFName != nil &&
-						amf.GetAmfName() == unavailableGuamiItem.BackupAMFName.Value {
-						backupAmf = amf
-						return false
+					for j := 0; j < oldAmf.GetLenPlmns(); j++ {
+						oldAmfSupportMcc, oldAmfSupportMnc := oldAmf.GetPlmnSupport(j)
+						if oldAmfSupportMcc == unavailableMcc && oldAmfSupportMnc == unavailableMnc &&
+							reflect.DeepEqual(oldAmf.GetRegionId(), unavailableGuamiItem.GUAMI.AMFRegionID.Value) &&
+							reflect.DeepEqual(oldAmf.GetSetId(), unavailableGuamiItem.GUAMI.AMFSetID.Value) &&
+							reflect.DeepEqual(oldAmf.GetPointer(), unavailableGuamiItem.GUAMI.AMFPointer.Value) {
+
+							ngapUeTnlaRebinding(gnb, backupAmf, amfPool, oldAmf)
+						}
+
 					}
 
 					return true
@@ -936,86 +958,85 @@ func HandlerAmfStatusIndication(amf *context.GNBAmf, gnb *context.GNBContext, me
 	}
 }
 
-func tnlaRebindingByBackupAmf(
+func ngapUeTnlaRebinding(
 	gnb *context.GNBContext,
 	backupAmf *context.GNBAmf,
 	amfPool *sync.Map,
-	unavailableMcc, unavailableMnc string,
-	unavailableGuamiItem *ngapType.UnavailableGUAMIItem,
+	toRemoveAmf *context.GNBAmf,
 ) {
 	log.Infof("[GNB] TNLA Rebinding by backup AMF: %s", backupAmf.GetAmfName())
+
+	// if no backup AMF, find the AMF with highest weight factor
+	if backupAmf == nil {
+		var maxWeightFactor int64
+		amfPool.Range(func(k, v any) bool {
+			oldAmf, ok := v.(*context.GNBAmf)
+			// check the amf is not in unavailable GUAMI item
+			if !ok || oldAmf == toRemoveAmf {
+				return true
+			}
+
+			if tnla := oldAmf.GetTNLA(); tnla.GetWeightFactor() > maxWeightFactor {
+				backupAmf = oldAmf
+			}
+
+			return true
+		})
+	}
+
 	amfPool.Range(func(k, v any) bool {
 		oldAmf, ok := v.(*context.GNBAmf)
+		if !ok || oldAmf != toRemoveAmf {
+			return true
+		}
+
+		log.Info("[GNB][AMF] Remove AMF: {",
+			" Id: ", oldAmf.GetAmfId(),
+			" Name: ", oldAmf.GetAmfName(),
+			" Ipv4: ", oldAmf.GetAmfIp(),
+			" }",
+		)
+		log.Info("Backup AMF: { Name: ", backupAmf.GetAmfName(), " }")
+
+		// NGAP UE-TNLA Rebinding
+		tnla := oldAmf.GetTNLA()
+
+		f1, err := os.OpenFile("/home/brian/PacketRusher/log/PDU_Session_Create_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+		if err != nil {
+			fmt.Println("Error opening or creating file:", err)
+		}
+
+		_, err = fmt.Fprintf(f1, "%s\n", "TNLA-Rebinding")
+		if err != nil {
+			fmt.Println("Error writing to file:", err)
+		}
+
+		uePool := gnb.GetUePool()
+		ResumeUePool(uePool, oldAmf, backupAmf)
+
+		prUePool := gnb.GetPrUePool()
+		ResumeUePool(prUePool, oldAmf, backupAmf)
+
+		tnla.Release()
+		amfPool.Delete(k)
+
+		return true
+	})
+}
+
+func ResumeUePool(uePool *sync.Map, oldAmf, backupAmf *context.GNBAmf) {
+	uePool.Range(func(_, v2 any) bool {
+		ue, ok := v2.(*context.GNBUe)
 		if !ok {
 			return true
 		}
-		for j := 0; j < oldAmf.GetLenPlmns(); j++ {
-			oldAmfSupportMcc, oldAmfSupportMnc := oldAmf.GetPlmnSupport(j)
 
-			if oldAmfSupportMcc == unavailableMcc && oldAmfSupportMnc == unavailableMnc &&
-				reflect.DeepEqual(oldAmf.GetRegionId(), unavailableGuamiItem.GUAMI.AMFRegionID.Value) &&
-				reflect.DeepEqual(oldAmf.GetSetId(), unavailableGuamiItem.GUAMI.AMFSetID.Value) &&
-				reflect.DeepEqual(oldAmf.GetPointer(), unavailableGuamiItem.GUAMI.AMFPointer.Value) {
-
-				log.Info("[GNB][AMF] Remove AMF: [",
-					"Id: ", oldAmf.GetAmfId(),
-					" Name: ", oldAmf.GetAmfName(),
-					" Ipv4: ", oldAmf.GetAmfIp(),
-					"]",
-				)
-				log.Info("Backup AMF: [Name: ", backupAmf.GetAmfName(), "]")
-
-				// NGAP UE-TNLA Rebinding
-				tnla := oldAmf.GetTNLA()
-
-				f1, err := os.OpenFile("/home/brian/PacketRusher/log/PDU_Session_Create_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-				if err != nil {
-					fmt.Println("Error opening or creating file:", err)
-				}
-
-				_, err = fmt.Fprintf(f1, "%s\n", "TNLA-Rebinding")
-				if err != nil {
-					fmt.Println("Error writing to file:", err)
-				}
-
-				uePool := gnb.GetUePool()
-				uePool.Range(func(_, v2 any) bool {
-					ue, ok := v2.(*context.GNBUe)
-					if !ok {
-						return true
-					}
-
-					if ue.GetAmfId() == oldAmf.GetAmfId() {
-						// set amfId and SCTP association for UE.
-						ue.SetAmfId(backupAmf.GetAmfId())
-						ue.SetSCTP(backupAmf.GetSCTPConn())
-					}
-
-					return true
-				})
-
-				prUePool := gnb.GetPrUePool()
-				prUePool.Range(func(_, v2 any) bool {
-					ue, ok := v2.(*context.GNBUe)
-					if !ok {
-						return true
-					}
-
-					if ue.GetAmfId() == oldAmf.GetAmfId() {
-						// set amfId and SCTP association for UE.
-						ue.SetAmfId(backupAmf.GetAmfId())
-						ue.SetSCTP(backupAmf.GetSCTPConn())
-					}
-
-					return true
-				})
-
-				tnla.Release()
-				amfPool.Delete(k)
-
-				return true
-			}
+		if ue.GetAmfId() == oldAmf.GetAmfId() {
+			// set amfId and SCTP association for UE.
+			ue.SetAmfId(backupAmf.GetAmfId())
+			ue.SetSCTP(backupAmf.GetSCTPConn())
 		}
+
 		return true
 	})
 }
