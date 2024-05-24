@@ -721,8 +721,11 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 					ipv4String, _ = ngapConvert.IPAddressToString(*toAddItem.AMFTNLAssociationAddress.EndpointIPAddress)
 				}
 
+				port := 38412 // default sctp port
+
 				amfPool := gnb.GetAmfPool()
 				amfExisted := false
+
 				amfPool.Range(func(key, value any) bool {
 					gnbAmf, ok := value.(*context.GNBAmf)
 					if !ok {
@@ -735,11 +738,11 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 					}
 					return true
 				})
+
 				if amfExisted {
 					continue
 				}
 
-				port := 38412 // default sctp port
 				newAmf := gnb.NewGnBAmf(ipv4String, port)
 				// newAmf.SetAmfName(amfName)
 				newAmf.SetAmfCapacity(amfCapacity)
@@ -821,8 +824,8 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 		oldAmf, ok := v.(*context.GNBAmf)
 		if ok {
 			tnla := oldAmf.GetTNLA()
-			log.Debugf("[AMF Name: %5s], IP: %10s, AMFCapacity: %3d, TNLA Weight Factor: %2d, TNLA Usage: %2d\n",
-				oldAmf.GetAmfName(), oldAmf.GetAmfIp(), oldAmf.GetAmfCapacity(), tnla.GetWeightFactor(), tnla.GetUsage())
+			log.Debugf("{AMF Name: %5s, IP: %10s, AMFCapacity: %3d, TNLA Weight Factor: %2d, TNLA Usage: %2d, State: %b }\n",
+				oldAmf.GetAmfName(), oldAmf.GetAmfIp(), oldAmf.GetAmfCapacity(), tnla.GetWeightFactor(), tnla.GetUsage(), oldAmf.GetState())
 		}
 		return true
 	})
@@ -964,8 +967,6 @@ func ngapUeTnlaRebinding(
 	amfPool *sync.Map,
 	toRemoveAmf *context.GNBAmf,
 ) {
-	log.Infof("[GNB] TNLA Rebinding by backup AMF: %s", backupAmf.GetAmfName())
-
 	// if no backup AMF, find the AMF with highest weight factor
 	if backupAmf == nil {
 		var maxWeightFactor int64
@@ -983,6 +984,12 @@ func ngapUeTnlaRebinding(
 			return true
 		})
 	}
+
+	if backupAmf == nil {
+		return
+	}
+
+	log.Infof("[GNB] TNLA Rebinding by backup AMF: %s", backupAmf.GetAmfName())
 
 	amfPool.Range(func(k, v any) bool {
 		oldAmf, ok := v.(*context.GNBAmf)

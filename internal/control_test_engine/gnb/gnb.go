@@ -40,6 +40,25 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 
 	// start communication with AMF (server SCTP).
 	for _, amfConfig := range conf.AMFs {
+		/*amfPool := gnb.GetAmfPool()
+		amfExisted := false
+
+		amfPool.Range(func(key, value any) bool {
+			gnbAmf, ok := value.(*context.GNBAmf)
+			if !ok {
+				return true
+			}
+			if gnbAmf.GetAmfIp() == amfConfig.Ip && gnbAmf.GetAmfPort() == amfConfig.Port {
+				amfExisted = true
+				return false
+			}
+			return true
+		})
+
+		if amfExisted {
+			continue
+		}*/
+
 		// new AMF context.
 		amf := gnb.NewGnBAmf(amfConfig.Ip, amfConfig.Port)
 
