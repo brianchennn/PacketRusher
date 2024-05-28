@@ -36,11 +36,14 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 		conf.GNodeB.ControlIF.Ip,
 		conf.GNodeB.DataIF.Ip,
 		conf.GNodeB.ControlIF.Port,
-		conf.GNodeB.DataIF.Port)
+		conf.GNodeB.DataIF.Port,
+	)
+
+	amfPool := gnb.GetAmfPool()
 
 	// start communication with AMF (server SCTP).
 	for _, amfConfig := range conf.AMFs {
-		amfPool := gnb.GetAmfPool()
+
 		amfExisted := false
 
 		amfPool.Range(func(key, value any) bool {
@@ -65,20 +68,7 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 
 		// start communication with AMF(SCTP).
 		if err := ngap.InitConn(amf, gnb); err != nil {
-			log.Warn("Error in ", err)
-			// delete amf in amfPool
-			amfPool.Range(func(k, v any) bool {
-				if thisAmf, ok := v.(*context.GNBAmf); ok {
-					if thisAmf == amf {
-						amfPool.Delete(k)
-						log.Warn("delete amf in amfPool")
-						return false
-					}
-				}
-
-				return true
-			})
-
+			log.Warn("Error in", err)
 			continue
 
 		} else {
@@ -88,6 +78,18 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 
 		trigger.SendNgSetupRequest(gnb, amf)
 	}
+
+	time.Sleep(time.Second)
+
+	amfPool.Range(func(k, v any) bool {
+		if amf, ok := v.(*context.GNBAmf); ok {
+			if amf.GetState() == 0 {
+				amfPool.Delete(k)
+			}
+		}
+
+		return true
+	})
 
 	// start communication with UE (server UNIX sockets).
 	serviceNas.InitServer(gnb)
