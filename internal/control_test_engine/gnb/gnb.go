@@ -56,6 +56,7 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 		})
 
 		if amfExisted {
+			log.Warn("TNLA existed")
 			continue
 		}
 
@@ -64,7 +65,22 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 
 		// start communication with AMF(SCTP).
 		if err := ngap.InitConn(amf, gnb); err != nil {
-			log.Fatal("Error in", err)
+			log.Warn("Error in ", err)
+			// delete amf in amfPool
+			amfPool.Range(func(k, v any) bool {
+				if thisAmf, ok := v.(*context.GNBAmf); ok {
+					if thisAmf == amf {
+						amfPool.Delete(k)
+						log.Warn("delete amf in amfPool")
+						return false
+					}
+				}
+
+				return true
+			})
+
+			continue
+
 		} else {
 			log.Info("[GNB] SCTP/NGAP service is running")
 			// wg.Add(1)

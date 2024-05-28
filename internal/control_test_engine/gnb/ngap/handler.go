@@ -679,18 +679,7 @@ func HandlerUeContextReleaseCommand(gnb *context.GNBContext, message *ngapType.N
 }
 
 func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext, message *ngapType.NGAPPDU) {
-	log.Debugf("Before Update:")
-
 	amfPool := gnb.GetAmfPool()
-	amfPool.Range(func(k, v any) bool {
-		oldAmf, ok := v.(*context.GNBAmf)
-		if ok {
-			tnla := oldAmf.GetTNLA()
-			log.Debugf("[AMF Name: %5s], IP: %10s, AMFCapacity: %3d, TNLA Weight Factor: %2d, TNLA Usage: %2d\n",
-				oldAmf.GetAmfName(), oldAmf.GetAmfIp(), oldAmf.GetAmfCapacity(), tnla.GetWeightFactor(), tnla.GetUsage())
-		}
-		return true
-	})
 
 	var amfName string
 	var amfCapacity int64
@@ -818,7 +807,7 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 		}
 	}
 
-	log.Debugf("After Update:")
+	log.Debugf("TNLAssociation list:")
 	amfPool = gnb.GetAmfPool()
 	amfPool.Range(func(k, v any) bool {
 		oldAmf, ok := v.(*context.GNBAmf)
