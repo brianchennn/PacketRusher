@@ -5,14 +5,58 @@
 package ngap
 
 import (
+	contexxt "context"
 	"fmt"
 	"my5G-RANTester/internal/control_test_engine/gnb/context"
+	"time"
 
 	"github.com/ishidawataru/sctp"
 	log "github.com/sirupsen/logrus"
 )
 
 var ConnCount int
+
+func DialSCTPExtWithTimeout(network, local, remote string, options sctp.InitMsg, timeout time.Duration) (*sctp.SCTPConn, error) {
+	ctx, cancel := contexxt.WithTimeout(contexxt.Background(), timeout)
+	defer cancel()
+
+	resultChan := make(chan struct {
+		conn *sctp.SCTPConn
+		err  error
+	}, 1)
+
+	go func() {
+		laddr, err := sctp.ResolveSCTPAddr(network, local)
+		if err != nil {
+			resultChan <- struct {
+				conn *sctp.SCTPConn
+				err  error
+			}{nil, err}
+			return
+		}
+		raddr, err := sctp.ResolveSCTPAddr(network, remote)
+		if err != nil {
+			resultChan <- struct {
+				conn *sctp.SCTPConn
+				err  error
+			}{nil, err}
+			return
+		}
+
+		conn, err := sctp.DialSCTPExt(network, laddr, raddr, sctp.InitMsg{NumOstreams: 2, MaxInstreams: 2})
+		resultChan <- struct {
+			conn *sctp.SCTPConn
+			err  error
+		}{conn, err}
+	}()
+
+	select {
+	case result := <-resultChan:
+		return result.conn, result.err
+	case <-ctx.Done():
+		return nil, fmt.Errorf("dial SCTP timed out")
+	}
+}
 
 func InitConn(amf *context.GNBAmf, gnb *context.GNBContext) error {
 
@@ -21,22 +65,17 @@ func InitConn(amf *context.GNBAmf, gnb *context.GNBContext) error {
 	local := fmt.Sprintf("%s:%d", gnb.GetGnbIp(), gnb.GetGnbPort()+ConnCount)
 	ConnCount++
 
-	rem, err := sctp.ResolveSCTPAddr("sctp", remote)
-	if err != nil {
-		return err
-	}
-	loc, err := sctp.ResolveSCTPAddr("sctp", local)
-	if err != nil {
-		return err
-	}
-
 	// streams := amf.GetTNLAStreams()
+	timeout := 200 * time.Millisecond
 
-	conn, err := sctp.DialSCTPExt(
+	conn, err := DialSCTPExtWithTimeout(
 		"sctp",
-		loc,
-		rem,
-		sctp.InitMsg{NumOstreams: 2, MaxInstreams: 2})
+		local,
+		remote,
+		sctp.InitMsg{NumOstreams: 2, MaxInstreams: 2},
+		timeout,
+	)
+
 	if err != nil {
 		amf.SetSCTPConn(nil)
 		return err

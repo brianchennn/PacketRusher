@@ -43,7 +43,6 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 
 	// start communication with AMF (server SCTP).
 	for _, amfConfig := range conf.AMFs {
-
 		amfExisted := false
 
 		amfPool.Range(func(key, value any) bool {
@@ -68,15 +67,12 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 
 		// start communication with AMF(SCTP).
 		if err := ngap.InitConn(amf, gnb); err != nil {
-			log.Warn("Error in", err)
-			continue
-
+			log.Warnf("SCTP Connect to %s:%d error: %s", amf.GetAmfIp(), amf.GetAmfPort(), err.Error())
 		} else {
 			log.Info("[GNB] SCTP/NGAP service is running")
+			trigger.SendNgSetupRequest(gnb, amf)
 			// wg.Add(1)
 		}
-
-		trigger.SendNgSetupRequest(gnb, amf)
 	}
 
 	time.Sleep(time.Second)
