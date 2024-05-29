@@ -11,6 +11,7 @@ package trigger
 
 import (
 	"fmt"
+	"my5G-RANTester/config"
 	context2 "my5G-RANTester/internal/control_test_engine/gnb/context"
 	"my5G-RANTester/internal/control_test_engine/ue/context"
 	"my5G-RANTester/internal/control_test_engine/ue/nas/message/nas_control"
@@ -28,16 +29,17 @@ func InitRegistration(ue *context.UEContext) {
 	log.Info("[UE] Initiating Registration")
 	var err error
 	timeStart := time.Now().UnixMicro()
-	f, err := os.OpenFile("log/PDU_Session_Registraion_Request.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-	if err != nil {
-		fmt.Println("Error opening or creating file:", err)
-	}
+	if config.GetConfig().Test.PrintTimeStamp {
+		f, err := os.OpenFile("log/PDU_Session_Registraion_Request.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+		if err != nil {
+			fmt.Println("Error opening or creating file:", err)
+		}
 
-	_, err = fmt.Fprintf(f, "%d,", timeStart)
-	if err != nil {
-		fmt.Println("Error writing to file:", err)
+		_, err = fmt.Fprintf(f, "%d,", timeStart)
+		if err != nil {
+			fmt.Println("Error writing to file:", err)
+		}
 	}
-
 	// registration procedure started.
 	registrationRequest := mm_5gs.GetRegistrationRequest(
 		nasMessage.RegistrationType5GSInitialRegistration,
@@ -63,14 +65,16 @@ func InitPduSessionRequest(ue *context.UEContext) {
 	log.Info("[UE] Initiating New PDU Session")
 
 	timeStart := time.Now().UnixMicro()
-	f, err := os.OpenFile("log/PDU_Session_Create_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-	if err != nil {
-		fmt.Println("Error opening or creating file:", err)
-	}
+	if config.GetConfig().Test.PrintTimeStamp {
+		f, err := os.OpenFile("log/PDU_Session_Create_Duration"+time.Now().Format("01-02-150405")+".csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+		if err != nil {
+			fmt.Println("Error opening or creating file:", err)
+		}
 
-	_, err = fmt.Fprintf(f, "%d,", timeStart)
-	if err != nil {
-		fmt.Println("Error writing to file:", err)
+		_, err = fmt.Fprintf(f, "%d,", timeStart)
+		if err != nil {
+			fmt.Println("Error writing to file:", err)
+		}
 	}
 
 	pduSession, err := ue.CreatePDUSession()

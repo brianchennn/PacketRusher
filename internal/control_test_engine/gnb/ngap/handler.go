@@ -8,6 +8,7 @@ package ngap
 import (
 	"encoding/binary"
 	"fmt"
+	"my5G-RANTester/config"
 	"my5G-RANTester/internal/control_test_engine/gnb/context"
 	"my5G-RANTester/internal/control_test_engine/gnb/nas/message/sender"
 	"my5G-RANTester/internal/control_test_engine/gnb/ngap/trigger"
@@ -996,15 +997,16 @@ func ngapUeTnlaRebinding(
 
 		// NGAP UE-TNLA Rebinding
 		tnla := oldAmf.GetTNLA()
+		if config.GetConfig().Test.PrintTimeStamp {
+			f1, err := os.OpenFile("/home/brian/PacketRusher/log/PDU_Session_Create_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+			if err != nil {
+				fmt.Println("Error opening or creating file:", err)
+			}
 
-		f1, err := os.OpenFile("/home/brian/PacketRusher/log/PDU_Session_Create_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-		if err != nil {
-			fmt.Println("Error opening or creating file:", err)
-		}
-
-		_, err = fmt.Fprintf(f1, "%s\n", "TNLA-Rebinding")
-		if err != nil {
-			fmt.Println("Error writing to file:", err)
+			_, err = fmt.Fprintf(f1, "%s\n", "TNLA-Rebinding")
+			if err != nil {
+				fmt.Println("Error writing to file:", err)
+			}
 		}
 
 		uePool := gnb.GetUePool()

@@ -7,6 +7,7 @@ package handler
 import (
 	"fmt"
 	"math"
+	"my5G-RANTester/config"
 	"my5G-RANTester/internal/control_test_engine/ue/context"
 	"my5G-RANTester/internal/control_test_engine/ue/nas/message/nas_control"
 	"my5G-RANTester/internal/control_test_engine/ue/nas/message/nas_control/mm_5gs"
@@ -331,14 +332,17 @@ func HandlerDlNasTransportPduaccept(ue *context.UEContext, message *nas.Message)
 	case nas.MsgTypePDUSessionEstablishmentAccept:
 		log.Info("[UE][NAS] Receiving PDU Session Establishment Accept")
 		timeEnd := time.Now().UnixMicro()
-		f, err := os.OpenFile("log/PDU_Session_Create_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-		if err != nil {
-			fmt.Println("Error opening or creating file:", err)
-		}
 
-		_, err = fmt.Fprintf(f, "%d\n", timeEnd)
-		if err != nil {
-			fmt.Println("Error writing to file:", err)
+		if config.GetConfig().Test.PrintTimeStamp {
+			f, err := os.OpenFile("log/PDU_Session_Create_Duration.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+			if err != nil {
+				fmt.Println("Error opening or creating file:", err)
+			}
+
+			_, err = fmt.Fprintf(f, "%d\n", timeEnd)
+			if err != nil {
+				fmt.Println("Error writing to file:", err)
+			}
 		}
 		// get UE ip
 		pduSessionEstablishmentAccept := payloadContainer.PDUSessionEstablishmentAccept

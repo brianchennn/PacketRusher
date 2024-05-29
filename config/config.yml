@@ -61,3 +61,6 @@ amfif:
     port: 38412
 logs:
     level: 7
+test: 
+  printTimeStamp: true
+  periodicPDUSessionCreateDestroy: true

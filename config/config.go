@@ -33,8 +33,14 @@ var config *Config
 type Config struct {
 	GNodeB GNodeB `yaml:"gnodeb"`
 	Ue     Ue     `yaml:"ue"`
-	AMFs   []*AMF    `yaml:"amfif"`
+	AMFs   []*AMF `yaml:"amfif"`
 	Logs   Logs   `yaml:"logs"`
+	Test   Test   `yaml:"test"`
+}
+
+type Test struct {
+	PrintTimeStamp                  bool `yaml:"printTimeStamp"`
+	PeriodicPDUSessionCreateDestroy bool `yaml:"periodicPDUSessionCreateDestroy"`
 }
 
 type GNodeB struct {
