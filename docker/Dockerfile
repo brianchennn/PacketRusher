@@ -15,8 +15,11 @@ ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 COPY . /packetrusher
 COPY replace_pkg/ngap /ngap
 
-RUN cd /packetrusher \
-    && go mod download \
+WORKDIR /packetrusher/lib/gtp5g
+RUN make && sudo make install
+
+WORKDIR /packetrusher
+RUN go mod download \
     && cd cmd && go build -o app
 
 #---------------------------------------------------------------------

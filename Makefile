@@ -1,4 +1,4 @@
 all:
-	go build cmd/packetrusher.go
+	go mod download && go build cmd/packetrusher.go
 clean:
 	rm ./packetrusher
