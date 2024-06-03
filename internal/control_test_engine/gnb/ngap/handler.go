@@ -744,13 +744,12 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 
 				// start communication with AMF(SCTP).
 				if err := InitConn(newAmf, gnb); err != nil {
-					log.Fatal("Error in", err)
+					log.Warnln(err)
 				} else {
 					log.Info("[GNB] SCTP/NGAP service is running")
+					trigger.SendNgSetupRequest(gnb, newAmf)
 					// wg.Add(1)
 				}
-
-				trigger.SendNgSetupRequest(gnb, newAmf)
 
 			}
 
