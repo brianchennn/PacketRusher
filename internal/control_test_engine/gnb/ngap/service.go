@@ -66,7 +66,7 @@ func InitConn(amf *context.GNBAmf, gnb *context.GNBContext) error {
 	ConnCount++
 
 	// streams := amf.GetTNLAStreams()
-	timeout := 200 * time.Millisecond
+	timeout := 500 * time.Millisecond
 
 	conn, err := DialSCTPExtWithTimeout(
 		"sctp",
