@@ -51,8 +51,12 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 				return true
 			}
 			if gnbAmf.GetAmfIp() == amfConfig.Ip && gnbAmf.GetAmfPort() == amfConfig.Port {
-				amfExisted = true
-				return false
+				if gnbAmf.GetState() > 0 {
+					amfExisted = true
+					return false
+				} else {
+					amfPool.Delete(key)
+				}
 			}
 			return true
 		})

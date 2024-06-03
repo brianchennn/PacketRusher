@@ -721,10 +721,14 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 					if !ok {
 						return true
 					}
-					if gnbAmf.GetAmfIp() == ipv4String {
-						log.Info("[GNB] SCTP/NGAP service exists")
-						amfExisted = true
-						return false
+					if gnbAmf.GetAmfIp() == ipv4String && gnbAmf.GetAmfPort() == port {
+						if gnbAmf.GetState() > 0 { // is Active
+							amfExisted = true
+							return false
+						} else {
+							amfPool.Delete(key)
+						}
+
 					}
 					return true
 				})
@@ -734,7 +738,6 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 				}
 
 				newAmf := gnb.NewGnBAmf(ipv4String, port)
-				// newAmf.SetAmfName(amfName)
 				newAmf.SetAmfCapacity(amfCapacity)
 				newAmf.SetRegionId(amfRegionId)
 				newAmf.SetSetId(amfSetId)
@@ -819,7 +822,7 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 		return true
 	})
 
-	trigger.SendAmfConfigurationUpdateAcknowledge(amf)
+	trigger.SendAmfConfigurationUpdateAcknowledge(amf, amfPool)
 }
 
 func HandlerAmfStatusIndication(amf *context.GNBAmf, gnb *context.GNBContext, message *ngapType.NGAPPDU) {

@@ -12,6 +12,7 @@ import (
 	"my5G-RANTester/internal/control_test_engine/gnb/ngap/message/ngap_control/ue_context_management"
 	"my5G-RANTester/internal/control_test_engine/gnb/ngap/message/ngap_control/ue_mobility_management"
 	"my5G-RANTester/internal/control_test_engine/gnb/ngap/message/sender"
+	"sync"
 
 	"github.com/free5gc/ngap/ngapType"
 	log "github.com/sirupsen/logrus"
@@ -106,11 +107,11 @@ func SendUeContextReleaseComplete(ue *context.GNBUe) {
 	}
 }
 
-func SendAmfConfigurationUpdateAcknowledge(amf *context.GNBAmf) {
+func SendAmfConfigurationUpdateAcknowledge(amf *context.GNBAmf, amfPool *sync.Map) {
 	log.Info("[GNB] Initiating AMF Configuration Update Acknowledge")
 
 	// send AMF Configure Update Acknowledge
-	ngapMsg, err := interface_management.AmfConfigurationUpdateAcknowledge()
+	ngapMsg, err := interface_management.AmfConfigurationUpdateAcknowledge(amfPool)
 	if err != nil {
 		log.Warn("[GNB][NGAP] Error sending AMF Configuration Update Acknowledge: ", err)
 	}
