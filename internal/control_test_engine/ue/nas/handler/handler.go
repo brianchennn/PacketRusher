@@ -266,14 +266,16 @@ func HandlerRegistrationAccept(ue *context.UEContext, message *nas.Message) {
 	sender.SendToGnb(ue, registrationComplete)
 
 	timeEnd := time.Now().UnixMicro()
-	f, err := os.OpenFile("log/PDU_Session_Registraion_Request.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
-	if err != nil {
-		fmt.Println("Error opening or creating file:", err)
-	}
+	if config.GetConfig().Test.PrintTimeStamp {
+		f, err := os.OpenFile("log/PDU_Session_Registraion_Request.csv", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0777)
+		if err != nil {
+			fmt.Println("Error opening or creating file:", err)
+		}
 
-	_, err = fmt.Fprintf(f, "%d\n", timeEnd)
-	if err != nil {
-		fmt.Println("Error writing to file:", err)
+		_, err = fmt.Fprintf(f, "%d\n", timeEnd)
+		if err != nil {
+			fmt.Println("Error writing to file:", err)
+		}
 	}
 }
 
