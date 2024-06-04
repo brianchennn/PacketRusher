@@ -75,7 +75,7 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 			amfPool.Range(func(k, v any) bool {
 				if oldAmf, ok := v.(*context.GNBAmf); ok {
 					if oldAmf == amf {
-						log.Warnln("Delete this GnbAmf")
+						log.Warnln("Delete this GnbAmf (TNLA)")
 						amfPool.Delete(k)
 					}
 				}

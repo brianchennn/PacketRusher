@@ -747,7 +747,17 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 
 				// start communication with AMF(SCTP).
 				if err := InitConn(newAmf, gnb); err != nil {
-					log.Warnln(err)
+					log.Warnf("SCTP Connect to %s:%d error: %s", amf.GetAmfIp(), amf.GetAmfPort(), err.Error())
+					amfPool.Range(func(k, v any) bool {
+						if oldAmf, ok := v.(*context.GNBAmf); ok {
+							if oldAmf == newAmf {
+								log.Warnln("Delete this GnbAmf (TNLA)")
+								amfPool.Delete(k)
+							}
+						}
+
+						return true
+					})
 				} else {
 					log.Info("[GNB] SCTP/NGAP service is running")
 					trigger.SendNgSetupRequest(gnb, newAmf)
