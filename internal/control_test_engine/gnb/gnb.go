@@ -72,6 +72,16 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 		// start communication with AMF(SCTP).
 		if err := ngap.InitConn(amf, gnb); err != nil {
 			log.Warnf("SCTP Connect to %s:%d error: %s", amf.GetAmfIp(), amf.GetAmfPort(), err.Error())
+			amfPool.Range(func(k, v any) bool {
+				if oldAmf, ok := v.(*context.GNBAmf); ok {
+					if oldAmf == amf {
+						log.Warnln("Delete this GnbAmf")
+						amfPool.Delete(k)
+					}
+				}
+
+				return true
+			})
 		} else {
 			log.Info("[GNB] SCTP/NGAP service is running")
 			trigger.SendNgSetupRequest(gnb, amf)
@@ -79,17 +89,7 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 		}
 	}
 
-	time.Sleep(time.Second)
-
-	amfPool.Range(func(k, v any) bool {
-		if amf, ok := v.(*context.GNBAmf); ok {
-			if amf.GetState() == 0 {
-				amfPool.Delete(k)
-			}
-		}
-
-		return true
-	})
+	// time.Sleep(time.Second)
 
 	// start communication with UE (server UNIX sockets).
 	serviceNas.InitServer(gnb)
