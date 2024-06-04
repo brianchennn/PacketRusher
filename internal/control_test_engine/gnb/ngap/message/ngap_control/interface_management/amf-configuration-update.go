@@ -37,7 +37,7 @@ func BuildAmfConfigurationUpdateAcknowledge(amfPool *sync.Map) (pdu ngapType.NGA
 	amfPool.Range(
 		func(k, v any) bool {
 			gnbAmf, ok := v.(*context.GNBAmf)
-			if !ok {
+			if !ok || gnbAmf.GetState() == 0 {
 				return true
 			}
 
