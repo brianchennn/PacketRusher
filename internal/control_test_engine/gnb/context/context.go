@@ -7,6 +7,7 @@ package context
 import (
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"slices"
 	"sync"
 	"time"
@@ -229,18 +230,34 @@ func (gnb *GNBContext) deleteGnBAmf(amfId int64) {
 	gnb.amfPool.Delete(amfId)
 }
 
+type AmfNameWeightFactors struct {
+	amfName      string
+	weightFactor int64
+}
+
 func (gnb *GNBContext) selectAmFByCapacity() *GNBAmf {
 	var amfSelect *GNBAmf
-	var maxWeightFactor int64 = -1
+	var amfNameWeightFactors []AmfNameWeightFactors
 	gnb.amfPool.Range(func(key, value interface{}) bool {
 		amf := value.(*GNBAmf)
 		if amf.relativeAmfCapacity > 0 {
-			if maxWeightFactor < amf.tnla.tnlaWeightFactor {
-				// select AMF
-				maxWeightFactor = amf.tnla.tnlaWeightFactor
-				amfSelect = amf
-			}
+			amfNameWeightFactors = append(amfNameWeightFactors, AmfNameWeightFactors{amf.GetAmfName(), amf.tnla.tnlaWeightFactor})
+		} else {
+			amfNameWeightFactors = append(amfNameWeightFactors, AmfNameWeightFactors{amf.GetAmfName(), 0})
 		}
+
+		return true
+	})
+
+	targetAmfName := GetAmfNameByWeightFactors(amfNameWeightFactors)
+
+	gnb.amfPool.Range(func(key, value interface{}) bool {
+		amf := value.(*GNBAmf)
+		if amf.GetAmfName() == targetAmfName {
+			amfSelect = amf
+			return false
+		}
+
 		return true
 	})
 
@@ -249,20 +266,64 @@ func (gnb *GNBContext) selectAmFByCapacity() *GNBAmf {
 
 func (gnb *GNBContext) selectAmFByActive() *GNBAmf {
 	var amfSelect *GNBAmf
-	var maxWeightFactor int64 = -1
+
+	var amfNameWeightFactors []AmfNameWeightFactors
 	gnb.amfPool.Range(func(key, value interface{}) bool {
 		amf := value.(*GNBAmf)
 		if amf.GetState() == Active {
-			if maxWeightFactor < amf.tnla.tnlaWeightFactor {
-				maxWeightFactor = amf.tnla.tnlaWeightFactor
-				amfSelect = amf
-			}
+			amfNameWeightFactors = append(amfNameWeightFactors, AmfNameWeightFactors{amf.GetAmfName(), amf.tnla.tnlaWeightFactor})
+		} else {
+			amfNameWeightFactors = append(amfNameWeightFactors, AmfNameWeightFactors{amf.GetAmfName(), 0})
+		}
+
+		return true
+	})
+
+	targetAmfName := GetAmfNameByWeightFactors(amfNameWeightFactors)
+
+	gnb.amfPool.Range(func(key, value interface{}) bool {
+		amf := value.(*GNBAmf)
+		if amf.GetAmfName() == targetAmfName {
+			amfSelect = amf
+			return false
 		}
 
 		return true
 	})
 
 	return amfSelect
+}
+
+func GetAmfNameByWeightFactors(amfNameWeightFactors []AmfNameWeightFactors) string {
+	if len(amfNameWeightFactors) == 0 {
+		return "" // Handle empty input case
+	}
+
+	// Calculate the total sum of the weight factors
+	var totalWeight int64
+	for _, amfNameWeight := range amfNameWeightFactors {
+		totalWeight += amfNameWeight.weightFactor
+	}
+
+	if totalWeight == 0 {
+		return amfNameWeightFactors[0].amfName
+	}
+
+	// Generate a random number between 0 and totalWeight-1
+	rand.Seed(time.Now().UnixNano())
+	randomWeight := rand.Int63n(totalWeight)
+
+	// Find the index corresponding to the random weight
+	var cumulativeWeight int64
+	for index, amfNameWeight := range amfNameWeightFactors {
+		cumulativeWeight += amfNameWeight.weightFactor
+		if randomWeight < cumulativeWeight {
+			return amfNameWeightFactors[index].amfName
+		}
+	}
+
+	// Return the last index as a fallback (should not reach here if weights are positive)
+	return amfNameWeightFactors[len(amfNameWeightFactors)-1].amfName
 }
 
 func (gnb *GNBContext) getGnbAmf(amfId int64) (*GNBAmf, error) {
