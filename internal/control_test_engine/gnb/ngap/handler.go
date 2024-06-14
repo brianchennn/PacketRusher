@@ -8,6 +8,7 @@ package ngap
 import (
 	"encoding/binary"
 	"fmt"
+	"math"
 	"my5G-RANTester/config"
 	"my5G-RANTester/internal/control_test_engine/gnb/context"
 	"my5G-RANTester/internal/control_test_engine/gnb/nas/message/sender"
@@ -810,6 +811,7 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 
 						oldAmf.SetTNLAUsage(toUpdateItem.TNLAssociationUsage.Value)
 						oldAmf.SetTNLAWeight(toUpdateItem.TNLAddressWeightFactor.Value)
+
 						return false
 					}
 					return true
@@ -818,6 +820,17 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 
 			// default:
 		}
+
+		var tmpTotalWeight, k1 float64
+		k1 = 1.5
+
+		amfPool.Range(func(k, v any) bool {
+			oldAmf := v.(*context.GNBAmf)
+			tnla := oldAmf.GetTNLA()
+			tmpTotalWeight += math.Pow(float64(tnla.GetWeightFactor()), k1)
+			context.TotalWeight = tmpTotalWeight
+			return true
+		})
 	}
 
 	log.Debugf("TNLAssociation list:")

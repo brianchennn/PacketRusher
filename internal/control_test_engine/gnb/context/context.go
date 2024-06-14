@@ -7,6 +7,7 @@ package context
 import (
 	"encoding/hex"
 	"fmt"
+	"math"
 	"math/rand"
 	"slices"
 	"sync"
@@ -235,6 +236,8 @@ type AmfNameWeightFactors struct {
 	weightFactor int64
 }
 
+var TotalWeight float64
+
 func (gnb *GNBContext) selectAmFByCapacity() *GNBAmf {
 	var amfSelect *GNBAmf
 	var amfNameWeightFactors []AmfNameWeightFactors
@@ -299,24 +302,20 @@ func GetAmfNameByWeightFactors(amfNameWeightFactors []AmfNameWeightFactors) stri
 		return "" // Handle empty input case
 	}
 
-	// Calculate the total sum of the weight factors
-	var totalWeight int64
-	for _, amfNameWeight := range amfNameWeightFactors {
-		totalWeight += amfNameWeight.weightFactor
-	}
-
-	if totalWeight == 0 {
+	if TotalWeight == 0 {
 		return amfNameWeightFactors[0].amfName
 	}
 
 	// Generate a random number between 0 and totalWeight-1
 	rand.Seed(time.Now().UnixNano())
-	randomWeight := rand.Int63n(totalWeight)
+	randomWeight := rand.Float64() * (TotalWeight)
 
 	// Find the index corresponding to the random weight
-	var cumulativeWeight int64
+	var cumulativeWeight float64
+	k := 1.5
+
 	for index, amfNameWeight := range amfNameWeightFactors {
-		cumulativeWeight += amfNameWeight.weightFactor
+		cumulativeWeight += math.Pow(float64(amfNameWeight.weightFactor), k)
 		if randomWeight < cumulativeWeight {
 			return amfNameWeightFactors[index].amfName
 		}
