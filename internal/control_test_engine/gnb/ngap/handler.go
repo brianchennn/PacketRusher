@@ -822,15 +822,15 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 		}
 
 		var tmpTotalWeight, k1 float64
-		k1 = 1.5
+		k1 = config.GetConfig().GNodeB.K
 
 		amfPool.Range(func(k, v any) bool {
 			oldAmf := v.(*context.GNBAmf)
 			tnla := oldAmf.GetTNLA()
 			tmpTotalWeight += math.Pow(float64(tnla.GetWeightFactor()), k1)
-			context.TotalWeight = tmpTotalWeight
 			return true
 		})
+		context.TotalWeight = tmpTotalWeight
 	}
 
 	log.Debugf("TNLAssociation list:")

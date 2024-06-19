@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"my5G-RANTester/config"
 	"slices"
 	"sync"
 	"time"
@@ -311,8 +312,8 @@ func GetAmfNameByWeightFactors(amfNameWeightFactors []AmfNameWeightFactors) stri
 	randomWeight := rand.Float64() * (TotalWeight)
 
 	// Find the index corresponding to the random weight
-	var cumulativeWeight float64
-	k := 1.5
+	var cumulativeWeight, k float64
+	k = config.GetConfig().GNodeB.K
 
 	for index, amfNameWeight := range amfNameWeightFactors {
 		cumulativeWeight += math.Pow(float64(amfNameWeight.weightFactor), k)

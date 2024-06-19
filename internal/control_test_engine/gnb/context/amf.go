@@ -36,10 +36,11 @@ type GNBAmf struct {
 }
 
 type TNLAssociation struct {
-	sctpConn         *sctp.SCTPConn
-	tnlaWeightFactor int64
-	usage            aper.Enumerated
-	streams          uint16
+	sctpConn            *sctp.SCTPConn
+	tnlaWeightFactor    int64
+	usage               aper.Enumerated
+	RegistrationCounter int64
+	streams             uint16
 }
 
 type SliceSupported struct {

@@ -54,6 +54,7 @@ func InitRegistration(ue *context.UEContext) {
 			log.Fatalf("[UE][NAS] Unable to encode with integrity protection Registration Request: %s", err)
 		}
 	}
+
 	// send to GNB.
 	sender.SendToGnb(ue, registrationRequest)
 

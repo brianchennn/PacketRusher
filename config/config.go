@@ -48,6 +48,7 @@ type GNodeB struct {
 	DataIF           DataIF           `yaml:"dataif"`
 	PlmnList         PlmnList         `yaml:"plmnlist"`
 	SliceSupportList SliceSupportList `yaml:"slicesupportlist"`
+	K                float64          `yaml:"k,omitempty"`
 }
 
 type ControlIF struct {
