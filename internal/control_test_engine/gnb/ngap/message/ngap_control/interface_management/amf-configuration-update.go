@@ -53,47 +53,23 @@ func BuildAmfConfigurationUpdateAcknowledge(amfPool *sync.Map) (pdu ngapType.NGA
 		},
 	)
 
-	ie1 := ngapType.AMFConfigurationUpdateAcknowledgeIEs{
-		Id: ngapType.ProtocolIEID{
-			Value: ngapType.ProtocolIEIDAMFTNLAssociationSetupList,
-		},
-		Criticality: ngapType.Criticality{
-			Value: ngapType.CriticalityPresentReject,
-		},
-		Value: ngapType.AMFConfigurationUpdateAcknowledgeIEsValue{
-			Present:                    ngapType.AMFConfigurationUpdateAcknowledgeIEsPresentAMFTNLAssociationSetupList,
-			AMFTNLAssociationSetupList: &amfTNLAssociationSetupList,
-		},
+	if len(amfTNLAssociationSetupList.List) > 0 {
+		ie1 := ngapType.AMFConfigurationUpdateAcknowledgeIEs{
+			Id: ngapType.ProtocolIEID{
+				Value: ngapType.ProtocolIEIDAMFTNLAssociationSetupList,
+			},
+			Criticality: ngapType.Criticality{
+				Value: ngapType.CriticalityPresentReject,
+			},
+			Value: ngapType.AMFConfigurationUpdateAcknowledgeIEsValue{
+				Present:                    ngapType.AMFConfigurationUpdateAcknowledgeIEsPresentAMFTNLAssociationSetupList,
+				AMFTNLAssociationSetupList: &amfTNLAssociationSetupList,
+			},
+		}
+
+		successfulOutcome.Value.AMFConfigurationUpdateAcknowledge.ProtocolIEs.List = append(successfulOutcome.Value.AMFConfigurationUpdateAcknowledge.ProtocolIEs.List, ie1)
+
 	}
-
-	/*criticalityDiagnostics := ngapType.CriticalityDiagnostics{
-		ProcedureCode: &ngapType.ProcedureCode{
-			Value: ngapType.ProcedureCodeAMFConfigurationUpdate,
-		},
-		TriggeringMessage: &ngapType.TriggeringMessage{
-			Value: ngapType.TriggeringMessagePresentSuccessfulOutcome,
-		},
-		ProcedureCriticality: &ngapType.Criticality{
-			Value: ngapType.CriticalityPresentReject,
-		},
-		IEExtensions: &ngapType.ProtocolExtensionContainerCriticalityDiagnosticsExtIEs{},
-	}
-
-	/*ie2 := ngapType.AMFConfigurationUpdateAcknowledgeIEs{
-		Id: ngapType.ProtocolIEID{
-			Value: ngapType.ProtocolIEIDCriticalityDiagnostics,
-		},
-		Criticality: ngapType.Criticality{
-			Value: ngapType.CriticalityPresentIgnore,
-		},
-		Value: ngapType.AMFConfigurationUpdateAcknowledgeIEsValue{
-			Present:                ngapType.AMFConfigurationUpdateAcknowledgeIEsPresentCriticalityDiagnostics,
-			CriticalityDiagnostics: &criticalityDiagnostics,
-		},
-	}*/
-
-	successfulOutcome.Value.AMFConfigurationUpdateAcknowledge.ProtocolIEs.List = append(successfulOutcome.Value.AMFConfigurationUpdateAcknowledge.ProtocolIEs.List, ie1)
-	//successfulOutcome.Value.AMFConfigurationUpdateAcknowledge.ProtocolIEs.List = append(successfulOutcome.Value.AMFConfigurationUpdateAcknowledge.ProtocolIEs.List, ie2)
 
 	return
 }
