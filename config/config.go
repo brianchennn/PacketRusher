@@ -44,11 +44,12 @@ type Test struct {
 }
 
 type GNodeB struct {
-	ControlIF        ControlIF        `yaml:"controlif"`
-	DataIF           DataIF           `yaml:"dataif"`
-	PlmnList         PlmnList         `yaml:"plmnlist"`
-	SliceSupportList SliceSupportList `yaml:"slicesupportlist"`
-	K                float64          `yaml:"k,omitempty"`
+	ControlIF           ControlIF        `yaml:"controlif"`
+	DataIF              DataIF           `yaml:"dataif"`
+	PlmnList            PlmnList         `yaml:"plmnlist"`
+	SliceSupportList    SliceSupportList `yaml:"slicesupportlist"`
+	K                   float64          `yaml:"k,omitempty"`
+	WaitSecAfterNGSetup float64          `yaml:"waitSecAfterNGSetup,omitempty"`
 }
 
 type ControlIF struct {

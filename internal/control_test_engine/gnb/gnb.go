@@ -89,7 +89,7 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 		}
 	}
 
-	// time.Sleep(time.Second)
+	time.Sleep(time.Duration(conf.GNodeB.WaitSecAfterNGSetup) * time.Second)
 
 	// start communication with UE (server UNIX sockets).
 	serviceNas.InitServer(gnb)
