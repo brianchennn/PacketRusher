@@ -63,5 +63,5 @@ amfif:
 logs:
     level: 7
 test: 
-  printTimeStamp: true
-  periodicPDUSessionCreateDestroy: true
+  printTimeStamp: false
+  periodicPDUSessionCreateDestroy: false

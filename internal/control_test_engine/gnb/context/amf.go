@@ -6,6 +6,7 @@ package context
 
 import (
 	"fmt"
+	"net"
 
 	"github.com/free5gc/aper"
 	"github.com/ishidawataru/sctp"
@@ -219,7 +220,34 @@ func (amf *GNBAmf) GetAmfIp() string {
 	return amf.amfIp
 }
 
+func isIPv4(ip string) bool {
+	parsedIP := net.ParseIP(ip)
+	return parsedIP != nil && parsedIP.To4() != nil
+}
+
+func resolveDomain(domain string) (string, error) {
+	ips, err := net.LookupIP(domain)
+	if err != nil {
+		return "", err
+	}
+
+	if len(ips) > 0 {
+		return ips[0].String(), nil
+	}
+	return "", fmt.Errorf("no IP addresses found for domain %s", domain)
+}
+
 func (amf *GNBAmf) SetAmfIp(ip string) {
+	if isIPv4(ip) {
+		amf.amfIp = ip
+		return
+	}
+
+	ip, err := resolveDomain(ip)
+	if err != nil {
+		return
+	}
+
 	amf.amfIp = ip
 }
 
