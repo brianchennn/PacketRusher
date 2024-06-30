@@ -27,6 +27,18 @@ func HandlerUeInitialized(ue *context.GNBUe, message []byte, gnb *context.GNBCon
 	conn := ue.GetSCTP()
 	err = sender.SendToAmF(ngap, conn)
 	if err != nil {
+		amfPool := gnb.GetAmfPool()
+		amfPool.Range(
+			func(k, v any) bool {
+				amf := v.(*context.GNBAmf)
+				if amf.GetSCTPConn() == conn {
+					amf.SetTNLAWeight(0)
+					return false
+				}
+
+				return true
+			})
+
 		log.Errorln("[GNB][AMF] Error sending initial UE message: ", err)
 	}
 }
@@ -42,6 +54,18 @@ func HandlerUeOngoing(ue *context.GNBUe, message []byte, gnb *context.GNBContext
 	conn := ue.GetSCTP()
 	err = sender.SendToAmF(ngap, conn)
 	if err != nil {
+		amfPool := gnb.GetAmfPool()
+		amfPool.Range(
+			func(k, v any) bool {
+				amf := v.(*context.GNBAmf)
+				if amf.GetSCTPConn() == conn {
+					amf.SetTNLAWeight(0)
+					return false
+				}
+
+				return true
+			})
+
 		log.Errorln("[GNB][AMF] Error sending Uplink Nas Transport: ", err)
 	}
 }
@@ -57,6 +81,18 @@ func HandlerUeReady(ue *context.GNBUe, message []byte, gnb *context.GNBContext) 
 	conn := ue.GetSCTP()
 	err = sender.SendToAmF(ngap, conn)
 	if err != nil {
+		amfPool := gnb.GetAmfPool()
+		amfPool.Range(
+			func(k, v any) bool {
+				amf := v.(*context.GNBAmf)
+				if amf.GetSCTPConn() == conn {
+					amf.SetTNLAWeight(0)
+					return false
+				}
+
+				return true
+			})
+
 		log.Errorln("[GNB][AMF] Error sending Uplink Nas Transport: ", err)
 	}
 }
