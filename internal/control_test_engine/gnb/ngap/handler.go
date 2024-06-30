@@ -816,19 +816,7 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 					return true
 				})
 			}
-
-			// default:
 		}
-
-		var tmpTotalWeight float64
-
-		amfPool.Range(func(k, v any) bool {
-			oldAmf := v.(*context.GNBAmf)
-			tnla := oldAmf.GetTNLA()
-			tmpTotalWeight += float64(tnla.GetWeightFactor())
-			return true
-		})
-		context.TotalWeight = tmpTotalWeight
 	}
 
 	log.Debugf("TNLAssociation list:")
