@@ -5,6 +5,8 @@
 package templates
 
 import (
+	"math"
+	"math/rand"
 	"my5G-RANTester/config"
 	"my5G-RANTester/internal/common/tools"
 	"my5G-RANTester/internal/control_test_engine/procedures"
@@ -15,6 +17,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 )
+
+func ExponentialTime(lambda float64) float64 {
+	return -math.Log(1.0-rand.Float64()) / lambda
+}
 
 func TestMultiUesInQueue(numUes int, tunnelMode config.TunnelMode, dedicatedGnb bool, loop bool, timeBetweenRegistration int, timeBeforeDeregistration int, timeBeforeNgapHandover int, timeBeforeXnHandover int, timeBeforeIdle int, timeBeforeReconnecting int, numPduSessions int) {
 	if tunnelMode != config.TunnelDisabled {
@@ -87,7 +93,8 @@ func TestMultiUesInQueue(numUes int, tunnelMode config.TunnelMode, dedicatedGnb 
 			tools.SimulateSingleUE(ueSimCfg, &wg)
 
 			// Before creating a new UE, we wait for timeBetweenRegistration ms
-			time.Sleep(time.Duration(timeBetweenRegistration) * time.Millisecond)
+			expTime := ExponentialTime(1.0 / float64(timeBetweenRegistration))
+			time.Sleep(time.Duration(expTime) * time.Millisecond)
 
 			select {
 			case <-sigStop:
