@@ -22,7 +22,21 @@ func ExponentialTime(lambda float64) float64 {
 	return -math.Log(1.0-rand.Float64()) / lambda
 }
 
-func TestMultiUesInQueue(numUes int, tunnelMode config.TunnelMode, dedicatedGnb bool, loop bool, timeBetweenRegistration int, timeBeforeDeregistration int, timeBeforeNgapHandover int, timeBeforeXnHandover int, timeBeforeIdle int, timeBeforeReconnecting int, numPduSessions int) {
+func TestMultiUesInQueue(
+	numUes int,
+	tunnelMode config.TunnelMode,
+	dedicatedGnb bool,
+	loop bool,
+	timeBetweenRegistration int,
+	timeBeforeDeregistration int,
+	timeBeforeNgapHandover int,
+	timeBeforeXnHandover int,
+	timeBeforeIdle int,
+	timeBeforeReconnecting int,
+	numPduSessions int,
+	registrationArrivalRate float64,
+	registrationArrivalRateGrowthRate float64,
+) {
 	if tunnelMode != config.TunnelDisabled {
 		if !dedicatedGnb {
 			log.Fatal("You cannot use the --tunnel option, without using the --dedicatedGnb option")
@@ -92,9 +106,19 @@ func TestMultiUesInQueue(numUes int, tunnelMode config.TunnelMode, dedicatedGnb 
 
 			tools.SimulateSingleUE(ueSimCfg, &wg)
 
-			// Before creating a new UE, we wait for timeBetweenRegistration ms
-			expTime := ExponentialTime(1.0 / float64(timeBetweenRegistration))
+			var expTime float64
+			if registrationArrivalRate == 0 {
+				// Before creating a new UE, we wait for Exp~(1/timeBetweenRegistration) ms
+				expTime = ExponentialTime(1.0 / float64(timeBetweenRegistration))
+			} else {
+				// Before creating a new UE, we wait for Exp~(registrationArrivalRate) ms
+				expTime = ExponentialTime(registrationArrivalRate / 1000)
+			}
+
 			time.Sleep(time.Duration(expTime) * time.Millisecond)
+
+			// Arrival Rate growth
+			registrationArrivalRate += (expTime * registrationArrivalRateGrowthRate / 1000)
 
 			select {
 			case <-sigStop:

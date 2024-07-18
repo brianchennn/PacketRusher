@@ -103,6 +103,8 @@ func main() {
 					&cli.BoolFlag{Name: "tunnel-vrf", Value: true, Usage: "Enable/disable VRP usage of the GTP-U tunnel interface."},
 					&cli.BoolFlag{Name: "dedicatedGnb", Aliases: []string{"d"}, Usage: "Enable the creation of a dedicated gNB per UE. Require one IP on N2/N3 per gNB."},
 					&cli.PathFlag{Name: "pcap", Usage: "Capture traffic to given PCAP file when a path is given", Value: "./dump.pcap"},
+					&cli.Float64Flag{Name: "registrationArrivalRate", Aliases: []string{"ar"}, Usage: "Registration Arrival Rate (UEs/sec)"},
+					&cli.Float64Flag{Name: "registrationArrivalRateGrowthRate", Aliases: []string{"gr"}, Usage: "Growth Rate (per second) for Registration Arrival Rate"},
 				},
 				Action: func(c *cli.Context) error {
 					var numUes int
@@ -138,7 +140,21 @@ func main() {
 							tunnelMode = config.TunnelTun
 						}
 					}
-					templates.TestMultiUesInQueue(numUes, tunnelMode, c.Bool("dedicatedGnb"), c.Bool("loop"), c.Int("timeBetweenRegistration"), c.Int("timeBeforeDeregistration"), c.Int("timeBeforeNgapHandover"), c.Int("timeBeforeXnHandover"), c.Int("timeBeforeIdle"), c.Int("timeBeforeReconnecting"), c.Int("numPduSessions"))
+					templates.TestMultiUesInQueue(
+						numUes,
+						tunnelMode,
+						c.Bool("dedicatedGnb"),
+						c.Bool("loop"),
+						c.Int("timeBetweenRegistration"),
+						c.Int("timeBeforeDeregistration"),
+						c.Int("timeBeforeNgapHandover"),
+						c.Int("timeBeforeXnHandover"),
+						c.Int("timeBeforeIdle"),
+						c.Int("timeBeforeReconnecting"),
+						c.Int("numPduSessions"),
+						c.Float64("registrationArrivalRate"),
+						c.Float64("registrationArrivalRateGrowthRate"),
+					)
 
 					return nil
 				},
