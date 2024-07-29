@@ -71,18 +71,19 @@ type SliceSupportList struct {
 }
 
 type Ue struct {
-	Msin             string     `yaml:"msin"`
-	Key              string     `yaml:"key"`
-	Opc              string     `yaml:"opc"`
-	Amf              string     `yaml:"amf"`
-	Sqn              string     `yaml:"sqn"`
-	Dnn              string     `yaml:"dnn"`
-	RoutingIndicator string     `yaml:"routingindicator"`
-	Hplmn            Hplmn      `yaml:"hplmn"`
-	Snssai           Snssai     `yaml:"snssai"`
-	Integrity        Integrity  `yaml:"integrity"`
-	Ciphering        Ciphering  `yaml:"ciphering"`
-	TunnelMode       TunnelMode `yaml:"-"`
+	Msin                      string     `yaml:"msin"`
+	Key                       string     `yaml:"key"`
+	Opc                       string     `yaml:"opc"`
+	Amf                       string     `yaml:"amf"`
+	Sqn                       string     `yaml:"sqn"`
+	Dnn                       string     `yaml:"dnn"`
+	RoutingIndicator          string     `yaml:"routingindicator"`
+	Hplmn                     Hplmn      `yaml:"hplmn"`
+	Snssai                    Snssai     `yaml:"snssai"`
+	Integrity                 Integrity  `yaml:"integrity"`
+	Ciphering                 Ciphering  `yaml:"ciphering"`
+	TunnelMode                TunnelMode `yaml:"-"`
+	PeriodicRegistrationTimer int        `yaml:"periodicRegistrationTimer"`
 }
 
 type Hplmn struct {

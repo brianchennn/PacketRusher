@@ -60,6 +60,37 @@ func InitRegistration(ue *context.UEContext) {
 
 	// change the state of ue for deregistered
 	ue.SetStateMM_DEREGISTERED()
+	go PeriodicRegistration(ue)
+}
+
+func PeriodicRegistration(ue *context.UEContext) {
+	t := config.GetConfig().Ue.PeriodicRegistrationTimer
+
+	for t > 0 {
+		time.Sleep(time.Duration(t * 1000000))
+
+		log.Info("[UE] Periodic Registration")
+		var err error
+
+		// registration procedure started.
+		registrationRequest := mm_5gs.GetRegistrationRequest(
+			nasMessage.RegistrationType5GSInitialRegistration,
+			nil,
+			nil,
+			false,
+			ue)
+
+		if len(ue.UeSecurity.Kamf) != 0 {
+			registrationRequest, err = nas_control.EncodeNasPduWithSecurity(
+				ue, registrationRequest, nas.SecurityHeaderTypeIntegrityProtectedAndCiphered, true, false)
+			if err != nil {
+				log.Fatalf("[UE][NAS] Unable to encode with integrity protection Registration Request: %s", err)
+			}
+		}
+
+		// send to GNB.
+		sender.SendToGnb(ue, registrationRequest)
+	}
 }
 
 func InitPduSessionRequest(ue *context.UEContext) {

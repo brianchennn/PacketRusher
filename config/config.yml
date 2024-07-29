@@ -38,6 +38,7 @@ ue:
     nea1: false
     nea2: true
     nea3: false
+  periodicRegistrationTimer: 1000 # ms
 amfif:
   - ip: "10.216.0.50"
     port: 38412
