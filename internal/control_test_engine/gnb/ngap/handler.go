@@ -737,6 +737,7 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 					continue
 				}
 
+				log.Infof("Add TNLA (ipv4: %s, port: %d)\n", ipv4String, port)
 				newAmf := gnb.NewGnBAmf(ipv4String, port)
 				newAmf.SetAmfCapacity(amfCapacity)
 				newAmf.SetRegionId(amfRegionId)

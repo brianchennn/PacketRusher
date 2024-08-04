@@ -43,26 +43,7 @@ func InitGnb(conf config.Config, wg *sync.WaitGroup) *context.GNBContext {
 
 	// start communication with AMF (server SCTP).
 	for _, amfConfig := range conf.AMFs {
-		amfExisted := false
-
-		amfPool.Range(func(key, value any) bool {
-			gnbAmf, ok := value.(*context.GNBAmf)
-			if !ok {
-				return true
-			}
-			if gnbAmf.GetAmfIp() == amfConfig.Ip && gnbAmf.GetAmfPort() == amfConfig.Port {
-				if gnbAmf.GetState() > 0 {
-					amfExisted = true
-					return false
-				} else {
-					amfPool.Delete(key)
-				}
-			}
-			return true
-		})
-
-		if amfExisted {
-			log.Warn("TNLA existed")
+		if gnb.IsTnlaExisted(amfConfig.Ip, amfConfig.Port) {
 			continue
 		}
 
@@ -128,9 +109,13 @@ func InitGnbForLoadSeconds(conf config.Config, wg *sync.WaitGroup,
 		conf.GNodeB.DataIF.Port)
 
 	// start communication with AMF (server SCTP).
-	for _, amf := range conf.AMFs {
+	for _, amfConfig := range conf.AMFs {
+		if gnb.IsTnlaExisted(amfConfig.Ip, amfConfig.Port) {
+			continue
+		}
+
 		// new AMF context.
-		amf := gnb.NewGnBAmf(amf.Ip, amf.Port)
+		amf := gnb.NewGnBAmf(amfConfig.Ip, amfConfig.Port)
 
 		// start communication with AMF(SCTP).
 		ngap.InitConn(amf, gnb)

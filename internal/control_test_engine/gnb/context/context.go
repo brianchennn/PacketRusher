@@ -226,6 +226,34 @@ func (gnb *GNBContext) GetAmfPool() *sync.Map {
 	return &gnb.amfPool
 }
 
+func (gnb *GNBContext) IsTnlaExisted(ip string, port int) bool {
+	amfPool := gnb.GetAmfPool()
+	amfExisted := false
+
+	amfPool.Range(func(key, value any) bool {
+		gnbAmf, ok := value.(*GNBAmf)
+		if !ok {
+			return true
+		}
+		if gnbAmf.GetAmfIp() == ip && gnbAmf.GetAmfPort() == port {
+			if gnbAmf.GetState() > 0 {
+				amfExisted = true
+				return false
+			} else {
+				amfPool.Delete(key)
+			}
+		}
+		return true
+	})
+
+	if amfExisted {
+		log.Warn("TNLA existed")
+		return true
+	}
+
+	return false
+}
+
 func (gnb *GNBContext) deleteGnBAmf(amfId int64) {
 	gnb.amfPool.Delete(amfId)
 }
