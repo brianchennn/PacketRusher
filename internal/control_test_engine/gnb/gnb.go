@@ -157,9 +157,12 @@ func InitGnbForAvaibility(conf config.Config,
 		conf.GNodeB.DataIF.Port)
 
 	// start communication with AMF (server SCTP).
-	for _, amf := range conf.AMFs {
+	for _, amfConfig := range conf.AMFs {
+		if gnb.IsTnlaExisted(amfConfig.Ip, amfConfig.Port) {
+			continue
+		}
 		// new AMF context.
-		amf := gnb.NewGnBAmf(amf.Ip, amf.Port)
+		amf := gnb.NewGnBAmf(amfConfig.Ip, amfConfig.Port)
 
 		// start communication with AMF(SCTP).
 		if err := ngap.InitConn(amf, gnb); err != nil {

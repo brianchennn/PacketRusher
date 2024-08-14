@@ -713,27 +713,7 @@ func HandlerAmfConfigurationUpdate(amf *context.GNBAmf, gnb *context.GNBContext,
 
 				port := 38412 // default sctp port
 
-				amfPool := gnb.GetAmfPool()
-				amfExisted := false
-
-				amfPool.Range(func(key, value any) bool {
-					gnbAmf, ok := value.(*context.GNBAmf)
-					if !ok {
-						return true
-					}
-					if gnbAmf.GetAmfIp() == ipv4String && gnbAmf.GetAmfPort() == port {
-						if gnbAmf.GetState() > 0 { // is Active
-							amfExisted = true
-							return false
-						} else {
-							amfPool.Delete(key)
-						}
-
-					}
-					return true
-				})
-
-				if amfExisted {
+				if gnb.IsTnlaExisted(ipv4String, port) {
 					continue
 				}
 
